@@ -42,9 +42,30 @@ class EditProfileForm(forms.ModelForm):
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['image', 'caption']
-
-
+        fields = ['image', 'video', 'caption']
+        widgets = {
+            'caption': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Write a caption...'})
+        }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        image = cleaned_data.get('image')
+        video = cleaned_data.get('video')
+        
+        # Check if both are empty
+        if not image and not video:
+            raise forms.ValidationError("Either image or video is required.")
+        
+        # Check if both are provided
+        if image and video:
+            # Remove one of them based on which was provided first
+            if 'image' in self.files:
+                cleaned_data['video'] = None
+            else:
+                cleaned_data['image'] = None
+        
+        return cleaned_data
+    
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment

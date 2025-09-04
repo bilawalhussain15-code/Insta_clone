@@ -7,6 +7,8 @@ from django.db.models import Q
 from .models import Post, CustomUser, Comment, Like, Follow, CommentLike
 from .forms import CustomUserCreationForm, EditProfileForm, PostForm, CommentForm
 
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 def login_view(request):   #Handle user login authentication.
     if request.method == 'POST':
@@ -105,9 +107,8 @@ def home_view(request):
 def profile_view(request, username=None):
     profile_user = get_object_or_404(CustomUser, username=username) if username else request.user
 
-    # Check if user can view this profile (for private accounts)
+    # Check if user can view this profile
     if not profile_user.can_view_profile(request.user):
-        # Check if follow request is pending
         is_pending = Follow.objects.filter(
             follower=request.user, 
             following=profile_user, 
@@ -123,12 +124,19 @@ def profile_view(request, username=None):
     if request.method == 'POST' and request.user == profile_user and form.is_valid():
         post = form.save(commit=False)
         post.user = request.user
-        post.save()
-        messages.success(request, "Post uploaded successfully.")
-        return redirect('user_profile', username=profile_user.username)
+        
+        # Validate that either image or video is provided
+        if not post.image and not post.video:
+            form.add_error(None, "Either image or video is required.")
+        else:
+            post.save()
+            messages.success(request, "Post uploaded successfully.")
+            return redirect('user_profile', username=profile_user.username)
 
-    posts = Post.objects.filter(user=profile_user).order_by('-created_at')
-    
+    # Get posts that have either image or video
+    posts = Post.objects.filter(user=profile_user).exclude(
+        Q(image__isnull=True) & Q(video__isnull=True)
+    ).order_by('-created_at')
     # CORRECT FOLLOW STATUS CHECK
     is_following = False
     is_pending = False
@@ -336,10 +344,8 @@ def following_list_view(request, username):
 
 
 
-# core/views.py - Update these views to return JSON responses for AJAX
 
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
+
 
 @require_POST
 @login_required

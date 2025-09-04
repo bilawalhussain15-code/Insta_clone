@@ -43,15 +43,26 @@ class CustomUser(AbstractUser):  #Custom User model extending Django's AbstractU
 
 
 
-class Post(models.Model):                                         #Post model images and captions.
+class Post(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='posts/')
+    image = models.ImageField(upload_to='posts/', blank=True, null=True)
+    video = models.FileField(upload_to='posts/videos/', blank=True, null=True)
     caption = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    
     def __str__(self):
         return f"{self.user.username}'s Post"
+    
+    
+    def is_video(self):
+        return bool(self.video and self.video.name)  # Check if video exists and has a file
+    
+    def has_media(self):
+        return bool(self.image) or bool(self.video)
 
+ 
+
+    
     @property
     def likes_count(self):   #Count of likes
         return self.like_set.count()

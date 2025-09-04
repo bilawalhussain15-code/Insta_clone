@@ -64,25 +64,24 @@
             </div>
 
             <!-- Follow Button -->
-            <!-- Follow Button Section -->
-{% if request.user != profile_user %}
-    <form action="{% url 'follow_toggle' profile_user.username %}" method="POST" class="mt-3">
-        {% csrf_token %}
-        {% if is_following %}
-            <button type="submit" class="bg-gray-600 px-4 py-1 rounded text-sm hover:bg-gray-500">
-                Following
-            </button>
-        {% elif is_pending %}
-            <button type="button" class="bg-yellow-600 px-4 py-1 rounded text-sm cursor-not-allowed" disabled>
-                Requested
-            </button>
-        {% else %}
-            <button type="submit" class="bg-blue-600 hover:bg-blue-500 px-4 py-1 rounded text-sm font-semibold">
-                Follow
-            </button>
-        {% endif %}
-    </form>
-{% endif %}
+            {% if request.user != profile_user %}
+            <form action="{% url 'follow_toggle' profile_user.username %}" method="POST" class="mt-3">
+                {% csrf_token %}
+                {% if is_following %}
+                    <button type="submit" class="bg-gray-600 px-4 py-1 rounded text-sm hover:bg-gray-500">
+                        Following
+                    </button>
+                {% elif is_pending %}
+                    <button type="button" class="bg-yellow-600 px-4 py-1 rounded text-sm cursor-not-allowed" disabled>
+                        Requested
+                    </button>
+                {% else %}
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 px-4 py-1 rounded text-sm font-semibold">
+                        Follow
+                    </button>
+                {% endif %}
+            </form>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -124,21 +123,46 @@
     <form method="POST" enctype="multipart/form-data" class="bg-gray-800 p-4 rounded-lg shadow">
         {% csrf_token %}
         <h2 class="text-lg font-semibold mb-3">Create a Post</h2>
-        <input type="file" name="image" class="mb-3 block w-full text-sm text-gray-200" required>
+        
+        <!-- Image Upload -->
+        <div class="mb-3">
+            <label class="block text-sm mb-1">Upload Image</label>
+            <input type="file" name="image" accept="image/*" class="block w-full text-sm text-gray-200">
+        </div>
+        
+        <!-- Video Upload -->
+        <div class="mb-3">
+            <label class="block text-sm mb-1">Upload Video</label>
+            <input type="file" name="video" accept="video/*" class="block w-full text-sm text-gray-200">
+        </div>
+        
         <textarea name="caption" rows="2" placeholder="Write a caption..." class="w-full bg-gray-700 p-2 rounded text-sm text-white"></textarea>
         <button type="submit" class="mt-3 bg-blue-600 px-4 py-2 rounded text-sm font-semibold hover:bg-blue-500">Post</button>
     </form>
 </div>
 {% endif %}
 
-<!-- Posts Grid -->
+<!-- Posts Grid - ONLY ONE SECTION -->
 <div class="max-w-3xl mx-auto mt-6 px-4">
     {% if posts %}
         <h2 class="text-lg font-semibold mb-3">Posts</h2>
         <div class="grid grid-cols-3 gap-2">
             {% for post in posts %}
                 <a href="{% url 'post_detail' post.id %}" class="relative group block">
-                    <img src="{{ post.image.url }}" class="w-full h-40 object-cover rounded">
+                    {% if post.image and post.image.url %}
+                        <!-- Image Post -->
+                        <img src="{{ post.image.url }}" class="w-full h-40 object-cover rounded">
+                    {% elif post.video and post.video.url %}
+                        <!-- Video Post -->
+                        <div class="w-full h-40 bg-black flex items-center justify-center rounded">
+                            <span class="text-white text-2xl">▶️</span>
+                        </div>
+                    {% else %}
+                        <!-- No Media -->
+                        <div class="w-full h-40 bg-gray-600 rounded flex items-center justify-center">
+                            <span class="text-white">No media</span>
+                        </div>
+                    {% endif %}
                     
                     <!-- Hover Overlay with Stats -->
                     <div class="absolute inset-0 bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">

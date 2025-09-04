@@ -1,4 +1,4 @@
-<!-- core/templates/core/post_detail.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,9 +36,28 @@
             </div>
         </div>
 
-        <!-- Post Image -->
+        <!-- Post Media -->
         <div class="flex justify-center bg-black">
-            <img src="{{ user_post.image.url }}" alt="Post Image" class="w-full object-contain max-h-[60vh]">
+            {% if user_post.is_video %}
+                {% if user_post.video %}
+                    <video controls class="w-full object-contain max-h-[60vh]" id="video-{{ user_post.id }}">
+                        <source src="{{ user_post.video.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                {% else %}
+                    <div class="w-full h-96 bg-gray-700 flex items-center justify-center">
+                        <span class="text-gray-400">Video not available</span>
+                    </div>
+                {% endif %}
+            {% else %}
+                {% if user_post.image %}
+                    <img src="{{ user_post.image.url }}" alt="Post Image" class="w-full object-contain max-h-[60vh]">
+                {% else %}
+                    <div class="w-full h-96 bg-gray-700 flex items-center justify-center">
+                        <span class="text-gray-400">Image not available</span>
+                    </div>
+                {% endif %}
+            {% endif %}
         </div>
 
         <!-- Engagement Buttons -->
@@ -83,12 +102,12 @@
             </form>
         </div>
 
-        <!-- Comments Section -->
+        <!-- Comments Section - ONLY ONE SECTION SHOULD BE HERE -->
         {% if user_post.comment_set.all %}
-        <div class="p-4 border-t border-gray-700" id="comments-container-{{ user_post.id }}">
+        <div class="p-4 border-t border-gray-700">
             <h4 class="font-semibold text-sm mb-3">Comments</h4>
-            <div class="" id="commentsss-container-{{ user_post.id }}">
-             {% for comment in user_post.comment_set.all %}
+            <div class="comments-container-{{ user_post.id }}">
+                {% for comment in user_post.comment_set.all %}
                 <div class="flex items-start space-x-2 mb-3" id="comment-{{ comment.id }}">
                     {% if comment.user.profile_picture %}
                         <img src="{{ comment.user.profile_picture.url }}" class="w-8 h-8 rounded-full object-cover">
@@ -192,17 +211,13 @@ function addComment(event, postId) {
                 commentCount.text(`(${response.comments_count})`);
                 
                 // Add new comment to the comments section
-                const commentsContainer = $(`#commentsss-container-${postId}`);
+                const commentsContainer = $(`.comments-container-${postId}`);
                 const newCommentHtml = `
                     <div class="flex items-start space-x-2 mb-3" id="comment-${response.comment_id}">
-                    {% if request.user.profile_picture %}
-                        <img src="{{ request.user.profile_picture.url }}" class="w-8 h-8 rounded-full object-cover">
-                    {% else %}
                         <div class="w-8 h-8 rounded-full bg-gray-600"></div>
-                    {% endif %}
                         <div class="flex-1">
-                            <a href="{% url 'user_profile' request.user.username %}" class="font-bold text-sm hover:underline">
-                                {{ request.user.username }}
+                            <a href="/profile/${response.username}/" class="font-bold text-sm hover:underline">
+                                ${response.username}
                             </a>
                             <p class="text-gray-300 text-sm">${commentText}</p>
                             <div class="flex items-center space-x-3 mt-1">

@@ -135,8 +135,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 AUTH_USER_MODEL = "core.CustomUser"
-# instaclone/settings.py
-# Password hashers
+
+MAX_VIDEO_SIZE = 50 * 1024 * 1024 
+ALLOWED_VIDEO_FORMATS = ['mp4', 'mov', 'avi', 'webm']
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  
+FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  
+
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
