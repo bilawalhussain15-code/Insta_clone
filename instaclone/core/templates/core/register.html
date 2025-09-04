@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center h-screen">
+    <div class="w-full max-w-md p-6">
+        <h1 class="text-3xl mb-6 text-center">Create Account</h1>
+        
+        <!-- ERROR MESSAGES -->
+        {% if form.errors %}
+        <div class="bg-red-800 p-3 rounded mb-4">
+            <h3 class="font-bold">Please fix these errors:</h3>
+            <ul class="text-sm">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            
+            <input type="text" name="username" placeholder="Username" required 
+                   class="w-full p-3 rounded bg-gray-800 border border-gray-700">
+            
+            <input type="text" name="name" placeholder="Full Name" 
+                   class="w-full p-3 rounded bg-gray-800 border border-gray-700">
+            
+            <input type="email" name="email" placeholder="Email" required 
+                   class="w-full p-3 rounded bg-gray-800 border border-gray-700">
+            
+            <input type="password" name="password1" placeholder="Password" required 
+                   class="w-full p-3 rounded bg-gray-800 border border-gray-700">
+            
+            <input type="password" name="password2" placeholder="Confirm Password" required 
+                   class="w-full p-3 rounded bg-gray-800 border border-gray-700">
+            
+            <textarea name="bio" placeholder="Bio" 
+                      class="w-full p-3 rounded bg-gray-800 border border-gray-700"></textarea>
+            
+            <select name="gender" class="w-full p-3 rounded bg-gray-800 border border-gray-700">
+                <option value="">Select Gender</option>
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+                <option value="O">Other</option>
+            </select>
+            
+            <input type="file" name="profile_picture" 
+                   class="w-full p-3 rounded bg-gray-800 border border-gray-700">
+            
+            <button type="submit" class="w-full bg-green-600 p-3 rounded hover:bg-green-700">
+                Register Account
+            </button>
+        </form>
+
+        <p class="text-center mt-4">
+            Already have an account?
+            <a href="{% url 'login' %}" class="text-blue-500 hover:underline">Login</a>
+        </p>
+    </div>
+</body>
+</html>

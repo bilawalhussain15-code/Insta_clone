@@ -1,0 +1,39 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center h-screen">
+    <div class="w-full max-w-sm p-6">
+        <h1 class="text-3xl mb-6 text-center">Login</h1>
+        
+        {% if error %}
+        <div class="bg-red-800 p-3 rounded mb-4">
+            <p class="text-sm">{{ error }}</p>
+        </div>
+        {% endif %}
+
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            
+            <input type="text" name="username" placeholder="Username" required 
+                   class="w-full p-3 rounded bg-gray-800 border border-gray-700">
+            
+            <input type="password" name="password" placeholder="Password" required 
+                   class="w-full p-3 rounded bg-gray-800 border border-gray-700">
+            
+            <button type="submit" class="w-full bg-blue-600 p-3 rounded hover:bg-blue-700">
+                Login
+            </button>
+        </form>
+
+        <p class="text-center mt-4">
+            Don't have an account?
+            <a href="{% url 'register' %}" class="text-blue-500 hover:underline">Create Account</a>
+        </p>
+    </div>
+</body>
+</html>

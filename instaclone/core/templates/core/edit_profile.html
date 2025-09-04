@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <!-- Navbar -->
+    <nav class="bg-gray-800 p-4 flex justify-between items-center">
+        <a href="{% url 'home' %}" class="text-lg font-bold">Instaclone</a>
+        <div>
+            <a href="{% url 'profile' %}" class="mr-4 hover:underline">Profile</a>
+            <a href="{% url 'logout' %}" class="hover:underline">Logout</a>
+        </div>
+    </nav>
+
+    <!-- Edit Profile Form -->
+    <div class="max-w-md mx-auto mt-6 bg-gray-800 p-6 rounded shadow">
+        <h1 class="text-2xl font-bold mb-4">Edit Profile</h1>
+        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            <input type="text" name="username" value="{{ form.instance.username }}" placeholder="Username" class="w-full p-2 rounded bg-gray-700">
+            <input type="text" name="name" value="{{ form.instance.name }}" placeholder="Full Name" class="w-full p-2 rounded bg-gray-700">
+            <input type="email" name="email" value="{{ form.instance.email }}" placeholder="Email" class="w-full p-2 rounded bg-gray-700">
+            <textarea name="bio" placeholder="Bio" class="w-full p-2 rounded bg-gray-700">{{ form.instance.bio }}</textarea>
+            <select name="gender" class="w-full p-2 rounded bg-gray-700">
+                <option value="">Select Gender</option>
+                <option value="M" {% if form.instance.gender == 'M' %}selected{% endif %}>Male</option>
+                <option value="F" {% if form.instance.gender == 'F' %}selected{% endif %}>Female</option>
+                <option value="O" {% if form.instance.gender == 'O' %}selected{% endif %}>Other</option>
+            </select>
+            <input type="file" name="profile_picture" class="w-full p-2 rounded bg-gray-700">
+            <button type="submit" class="w-full bg-green-600 p-2 rounded hover:bg-green-700">Save Changes</button>
+        </form>
+    </div>
+</body>
+</html>

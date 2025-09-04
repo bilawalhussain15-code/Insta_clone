@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ profile_user.username }}'s Followers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white">
+
+<nav class="bg-gray-800 p-4 flex justify-between items-center shadow-md">
+    <div class="text-2xl font-bold">Instaclone</div>
+    <form action="{% url 'search_users' %}" method="GET" class="flex space-x-2">
+        <input type="text" name="q" placeholder="Search users..." class="rounded px-2 py-1 text-black w-64">
+        <button type="submit" class="bg-blue-600 px-3 py-1 rounded hover:bg-blue-500">Search</button>
+    </form>
+    <div class="space-x-4 text-base">
+        <a href="{% url 'home' %}" class="hover:text-blue-400">Home</a>
+        <a href="{% url 'profile' %}" class="hover:text-blue-400">Profile</a>
+        <a href="{% url 'logout' %}" class="hover:text-blue-400">Logout</a>
+    </div>
+</nav>
+
+<div class="max-w-2xl mx-auto mt-6 px-4">
+    <h2 class="text-xl font-semibold mb-4">{{ profile_user.username }}'s Followers</h2>
+
+    {% if followers %}
+        <ul class="space-y-4">
+            {% for user in followers %}
+            <li class="flex items-center justify-between bg-gray-800 p-3 rounded shadow hover:bg-gray-700 transition">
+                <div class="flex items-center space-x-4">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" class="w-12 h-12 rounded-full object-cover">
+                    {% else %}
+                        <div class="w-12 h-12 rounded-full bg-gray-600"></div>
+                    {% endif %}
+                    <div>
+                        <p class="font-semibold">
+                            <a href="{% url 'user_profile' user.username %}" class="hover:underline">{{ user.username }}</a>
+                        </p>
+                        {% if user.name %}<p class="text-gray-400 text-sm">{{ user.name }}</p>{% endif %}
+                    </div>
+                </div>
+
+                {% if request.user != user %}
+                <form action="{% url 'follow_toggle' user.username %}" method="POST">
+                    {% csrf_token %}
+                    {% if user.is_followed_by_me %}
+                        <button type="submit" class="bg-gray-700 text-sm px-3 py-1 rounded hover:bg-gray-600">Following</button>
+                    {% elif user.is_pending %}
+                        <button type="button" class="bg-yellow-600 text-sm px-3 py-1 rounded cursor-not-allowed" disabled>Requested</button>
+                    {% else %}
+                        <button type="submit" class="bg-blue-600 text-sm px-3 py-1 rounded hover:bg-blue-500">Follow</button>
+                    {% endif %}
+                </form>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-gray-400 text-center mt-6 text-lg">No followers yet.</p>
+    {% endif %}
+</div>
+
+</body>
+</html>

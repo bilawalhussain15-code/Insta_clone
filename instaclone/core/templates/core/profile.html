@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ profile_user.username }}'s Profile - Instaclone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white">
+
+<!-- Navigation Bar -->
+<nav class="bg-gray-800 p-4 flex justify-between items-center shadow-md">
+    <div class="text-2xl font-bold">Instaclone</div>
+
+    <!-- Search Form -->
+    <form action="{% url 'search_users' %}" method="GET" class="flex space-x-2">
+        <input type="text" name="q" placeholder="Search users..." class="w-full p-2 rounded bg-gray-700 text-white">
+        <button type="submit" class="bg-blue-600 px-3 py-1 rounded hover:bg-blue-500">Search</button>
+    </form>
+
+    <!-- Navigation Links -->
+    <div class="space-x-4 text-base">
+        <a href="{% url 'home' %}" class="hover:text-blue-400">Home</a>
+        <a href="{% url 'profile' %}" class="hover:text-blue-400">Profile</a>
+        {% if request.user == profile_user %}
+            <a href="{% url 'edit_profile' %}" class="hover:text-blue-400">Edit Profile</a>
+        {% endif %}
+        <a href="{% url 'logout' %}" class="hover:text-blue-400">Logout</a>
+    </div>
+</nav>
+
+<!-- Profile Header -->
+<div class="max-w-3xl mx-auto mt-8 px-4">
+    <div class="flex items-center space-x-8">
+        <!-- Profile Picture -->
+        {% if profile_user.profile_picture %}
+            <img src="{{ profile_user.profile_picture.url }}" class="w-28 h-28 rounded-full object-cover border-2 border-gray-600">
+        {% else %}
+            <div class="w-28 h-28 rounded-full bg-gray-600"></div>
+        {% endif %}
+
+        <!-- Profile Information -->
+        <div class="flex-1">
+            <p class="text-2xl font-semibold">{{ profile_user.username }}</p>
+            {% if profile_user.name %}
+                <p class="text-lg text-gray-300">{{ profile_user.name }}</p>
+            {% endif %}
+            <p class="text-sm text-gray-400 mt-1">{{ profile_user.bio }}</p>
+
+            <!-- Profile Stats -->
+            <div class="flex space-x-6 mt-2 text-center">
+                <p>
+                    <strong>{{ profile_user.posts_count }}</strong><br>Posts
+                </p>
+                <p>
+                    <a href="{% url 'followers_list' profile_user.username %}" class="hover:underline">
+                        <strong>{{ profile_user.followers_count }}</strong><br>Followers
+                    </a>
+                </p>
+                <p>
+                    <a href="{% url 'following_list' profile_user.username %}" class="hover:underline">
+                        <strong>{{ profile_user.following_count }}</strong><br>Following
+                    </a>
+                </p>
+            </div>
+
+            <!-- Follow Button -->
+            <!-- Follow Button Section -->
+{% if request.user != profile_user %}
+    <form action="{% url 'follow_toggle' profile_user.username %}" method="POST" class="mt-3">
+        {% csrf_token %}
+        {% if is_following %}
+            <button type="submit" class="bg-gray-600 px-4 py-1 rounded text-sm hover:bg-gray-500">
+                Following
+            </button>
+        {% elif is_pending %}
+            <button type="button" class="bg-yellow-600 px-4 py-1 rounded text-sm cursor-not-allowed" disabled>
+                Requested
+            </button>
+        {% else %}
+            <button type="submit" class="bg-blue-600 hover:bg-blue-500 px-4 py-1 rounded text-sm font-semibold">
+                Follow
+            </button>
+        {% endif %}
+    </form>
+{% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Account Privacy Settings -->
+{% if request.user == profile_user %}
+<div class="max-w-3xl mx-auto mt-6 px-4">
+    <div class="bg-gray-800 p-4 rounded-lg">
+        <h3 class="font-semibold mb-2">Account Privacy</h3>
+        <form action="{% url 'toggle_private' %}" method="POST">
+            {% csrf_token %}
+            <button type="submit" class="flex items-center space-x-2 {% if profile_user.is_private %}bg-green-600{% else %}bg-gray-600{% endif %} px-4 py-2 rounded">
+                {% if profile_user.is_private %}
+                    <span>🔒</span>
+                    <span>Private Account</span>
+                {% else %}
+                    <span>🌐</span>
+                    <span>Public Account</span>
+                {% endif %}
+            </button>
+        </form>
+        <p class="text-gray-400 text-xs mt-2">
+            {% if profile_user.is_private %}
+                Only approved followers can see your posts. 
+                <a href="{% url 'follow_requests' %}" class="text-blue-400 hover:underline">
+                    View Follow Requests ({{ profile_user.pending_followers_count }})
+                </a>
+            {% else %}
+                Anyone can see your posts
+            {% endif %}
+        </p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Create Post Form -->
+{% if request.user == profile_user %}
+<div class="max-w-3xl mx-auto mt-6 px-4">
+    <form method="POST" enctype="multipart/form-data" class="bg-gray-800 p-4 rounded-lg shadow">
+        {% csrf_token %}
+        <h2 class="text-lg font-semibold mb-3">Create a Post</h2>
+        <input type="file" name="image" class="mb-3 block w-full text-sm text-gray-200" required>
+        <textarea name="caption" rows="2" placeholder="Write a caption..." class="w-full bg-gray-700 p-2 rounded text-sm text-white"></textarea>
+        <button type="submit" class="mt-3 bg-blue-600 px-4 py-2 rounded text-sm font-semibold hover:bg-blue-500">Post</button>
+    </form>
+</div>
+{% endif %}
+
+<!-- Posts Grid -->
+<div class="max-w-3xl mx-auto mt-6 px-4">
+    {% if posts %}
+        <h2 class="text-lg font-semibold mb-3">Posts</h2>
+        <div class="grid grid-cols-3 gap-2">
+            {% for post in posts %}
+                <a href="{% url 'post_detail' post.id %}" class="relative group block">
+                    <img src="{{ post.image.url }}" class="w-full h-40 object-cover rounded">
+                    
+                    <!-- Hover Overlay with Stats -->
+                    <div class="absolute inset-0 bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                        <div class="text-center">
+                            <div class="flex space-x-4 text-sm">
+                                <span class="flex items-center">
+                                    ❤️ {{ post.likes_count }}
+                                </span>
+                                <span class="flex items-center">
+                                    💬 {{ post.comments_count }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-center text-gray-400 mt-4">No posts yet.</p>
+    {% endif %}
+</div>
+
+</body>
+</html>

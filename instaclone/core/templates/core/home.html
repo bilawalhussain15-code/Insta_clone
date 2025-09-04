@@ -1,0 +1,250 @@
+<!-- core/templates/core/home.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home - Instaclone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jQuery for AJAX -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white">
+
+<!-- Navigation Bar -->
+<nav class="bg-gray-800 p-4 flex justify-between items-center shadow-md">
+    <div class="text-2xl font-bold">Instaclone</div>
+
+    <!-- Search Form -->
+    <form action="{% url 'search_users' %}" method="GET" class="flex space-x-2">
+        <input type="text" name="q" placeholder="Search users..." class="w-full p-2 rounded bg-gray-700 text-white">
+        <button type="submit" class="bg-blue-600 px-3 py-1 rounded hover:bg-blue-500">Search</button>
+    </form>
+
+    <!-- Navigation Links -->
+    <div class="space-x-4 text-base">
+        <a href="{% url 'home' %}" class="hover:text-blue-400">Home</a>
+        <a href="{% url 'profile' %}" class="hover:text-blue-400">Profile</a>
+        <a href="{% url 'edit_profile' %}" class="hover:text-blue-400">Edit Profile</a>
+        <a href="{% url 'logout' %}" class="hover:text-blue-400">Logout</a>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="max-w-2xl mx-auto mt-6 space-y-6 px-4" id="posts-container">
+    {% if posts %}
+        {% for post in posts %}
+        <div class="bg-gray-800 rounded shadow p-4 hover:shadow-lg transition" id="post-{{ post.id }}">
+            <!-- User Information -->
+            <div class="flex items-center space-x-4 mb-2">
+                {% if post.user.profile_picture %}
+                    <img src="{{ post.user.profile_picture.url }}" class="w-10 h-10 rounded-full object-cover">
+                {% else %}
+                    <div class="w-10 h-10 rounded-full bg-gray-600"></div>
+                {% endif %}
+                <p class="font-bold">
+                    <a href="{% url 'user_profile' post.user.username %}" class="hover:underline">
+                        {{ post.user.username }}
+                    </a>
+                </p>
+            </div>
+
+            <!-- Post Image -->
+            {% if post.image %}
+                <a href="{% url 'post_detail' post.id %}">
+                    <img src="{{ post.image.url }}" alt="Post Image" class="w-full rounded mb-2 object-cover max-h-96 cursor-pointer">
+                </a>
+            {% endif %}
+
+            <!-- Post Caption -->
+            <p class="mb-2">{{ post.caption }}</p>
+
+            <!-- Engagement Buttons -->
+            <div class="flex items-center space-x-4 mb-3">
+                <!-- Like Button -->
+                <button onclick="toggleLike({{ post.id }})" class="flex items-center space-x-1 hover:text-red-500 like-btn-{{ post.id }}">
+                    {% if post.is_liked %}
+                        <span class="text-red-500" id="like-icon-{{ post.id }}">❤️</span>
+                    {% else %}
+                        <span id="like-icon-{{ post.id }}">🤍</span>
+                    {% endif %}
+                    <span id="like-count-{{ post.id }}">({{ post.likes_count }})</span>
+                </button>
+                
+                <!-- Comment Button -->
+                <a href="{% url 'post_detail' post.id %}" class="flex items-center space-x-1 hover:text-blue-400">
+                    <span>💬</span>
+                    <span id="comment-count-{{ post.id }}">({{ post.comments_count }})</span>
+                </a>
+            </div>
+
+            <!-- Comment Form -->
+            <form onsubmit="addComment(event, {{ post.id }})" class="flex items-center space-x-2 mt-2">
+                <input type="text" id="comment-text-{{ post.id }}" placeholder="Add a comment..." 
+                       class="flex-1 bg-gray-700 rounded-full px-3 py-1 text-sm">
+                <button type="submit" class="text-blue-400 text-sm">Post</button>
+            </form>
+
+            <!-- Comments Section -->
+            <div class="mt-2 space-y-2" id="comments-container-{{ post.id }}">
+                {% for comment in post.comment_set.all|slice:":3" %}
+                    <div class="flex items-start justify-between" id="comment-{{ comment.id }}">
+                        <div class="flex-1">
+                            <p class="text-gray-300 text-sm">
+                                <span class="font-bold">{{ comment.user.username }}</span>: {{ comment.text }}
+                            </p>
+                            <div class="flex items-center space-x-3 mt-1">
+                                <span class="text-gray-500 text-xs">{{ comment.created_at|timesince }} ago</span>
+                                
+                                <!-- Comment Like Button -->
+                                <button onclick="toggleCommentLike({{ comment.id }})" class="flex items-center space-x-1 text-gray-500 hover:text-red-400 text-xs comment-like-btn-{{ comment.id }}">
+                                    {% if comment.is_liked %}
+                                        <span class="text-red-400" id="comment-like-icon-{{ comment.id }}">❤️</span>
+                                    {% else %}
+                                        <span id="comment-like-icon-{{ comment.id }}">🤍</span>
+                                    {% endif %}
+                                    <span id="comment-like-count-{{ comment.id }}">({{ comment.likes_count }})</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                {% if post.comments_count > 3 %}
+                    <a href="{% url 'post_detail' post.id %}" class="text-gray-400 text-sm hover:underline">
+                        View all {{ post.comments_count }} comments
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-center text-gray-400">No posts yet. Follow users to see their posts!</p>
+    {% endif %}
+</div>
+
+<script>
+// CSRF Token for AJAX
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Like/Unlike Post
+function toggleLike(postId) {
+    $.ajax({
+        url: `/post/${postId}/like/`,
+        type: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        success: function(response) {
+            const likeIcon = $(`#like-icon-${postId}`);
+            const likeCount = $(`#like-count-${postId}`);
+            
+            if (response.liked) {
+                likeIcon.html('❤️').addClass('text-red-500');
+                likeCount.text(`(${response.likes_count})`);
+            } else {
+                likeIcon.html('🤍').removeClass('text-red-500');
+                likeCount.text(`(${response.likes_count})`);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+        }
+    });
+}
+
+// Add Comment
+function addComment(event, postId) {
+    event.preventDefault();
+    const commentText = $(`#comment-text-${postId}`).val().trim();
+    
+    if (!commentText) return;
+    
+    $.ajax({
+        url: `/post/${postId}/comment/`,
+        type: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        data: {
+            text: commentText
+        },
+        success: function(response) {
+            if (response.success) {
+                // Clear input
+                $(`#comment-text-${postId}`).val('');
+                
+                // Update comment count
+                const commentCount = $(`#comment-count-${postId}`);
+                commentCount.text(`(${response.comments_count})`);
+                
+                // Add new comment to the comments section
+                const commentsContainer = $(`#comments-container-${postId}`);
+                const newCommentHtml = `
+                    <div class="flex items-start justify-between" id="comment-${response.comment_id}">
+                        <div class="flex-1">
+                            <p class="text-gray-300 text-sm">
+                                <span class="font-bold">${response.username}</span>: ${commentText}
+                            </p>
+                            <div class="flex items-center space-x-3 mt-1">
+                                <span class="text-gray-500 text-xs">just now</span>
+                                <button onclick="toggleCommentLike(${response.comment_id})" class="flex items-center space-x-1 text-gray-500 hover:text-red-400 text-xs comment-like-btn-${response.comment_id}">
+                                    <span id="comment-like-icon-${response.comment_id}">🤍</span>
+                                    <span id="comment-like-count-${response.comment_id}">(0)</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add new comment at the top
+                commentsContainer.prepend(newCommentHtml);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+        }
+    });
+}
+
+// Like/Unlike Comment
+function toggleCommentLike(commentId) {
+    $.ajax({
+        url: `/comment/${commentId}/like/`,
+        type: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        success: function(response) {
+            const likeIcon = $(`#comment-like-icon-${commentId}`);
+            const likeCount = $(`#comment-like-count-${commentId}`);
+            
+            if (response.liked) {
+                likeIcon.html('❤️').addClass('text-red-400');
+                likeCount.text(`(${response.likes_count})`);
+            } else {
+                likeIcon.html('🤍').removeClass('text-red-400');
+                likeCount.text(`(${response.likes_count})`);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+        }
+    });
+}
+</script>
+
+</body>
+</html>
